@@ -367,10 +367,8 @@ def upload_file():
         func_desc = get_param(request.form, 'desc', required=False)
         func_id = PGSession.query(MLPMTaskFunc.id).filter(MLPMTaskFunc.name == func_name).scalar()
         if not func_id:
-            print("fun not found")
             raise MLPMJobException(MLPMJobErrorEnum.FUNC_NOT_FOUND)
         try:
-            print('get fun')
             args = json.loads(func_args)
             alg = args[0]
             if not isinstance(args, typing.Iterable):
@@ -401,8 +399,12 @@ def upload_file():
             rs['kwargs']=func_kwargs
             rs['args']=func_args
         try:
-            print(func)
-            r = func.delay(alg,os.path.join(MEDIA_DIR,filename),{})
+            alg = args[0]
+            print(alg)
+            params = args[1]
+            label = args[2]
+            features = args[3]
+            r = func.delay(alg,os.path.join(MEDIA_DIR,filename),params,label,features)
             print(r.id)
             user_task = UserTask(username=username, func_id=func_id,
                              task_id=r.id, args=func_args, kwargs=func_kwargs,

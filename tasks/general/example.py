@@ -28,6 +28,7 @@ from pyspark.ml.linalg import Vectors,Vector
 from pyspark.ml.classification import DecisionTreeClassifier,LinearSVC,LogisticRegression
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 import os
+from .ml_handle.utils import get_train_model,get_result_and_imgs
 os.environ['JAVA_HOME']='/usr/jdk8'
 
 LOGGER = get_logger('celery.MLPMAsyncTask')
@@ -213,59 +214,71 @@ def regressionModel(alg, filename, paras):
 
 
 @shared_task(base=MLPMAsyncTask)
-def handle(alg, filename, paras):
-    '''
-    算法入口函数
-    :param alg:算法名称
-    :param paras: 参数列表
-    :param filename: 数据集路径
-    :return: 准确率，模型
-    '''
-    print('enter handle')
-    rs={}
-    rs['alg']=alg
-    clf = ''
-    if alg in ['Linear','Bayes','Ridge']:
-        rs = regressionModel(alg, filename, paras)
-        return rs
-    fileType = filename.split('.')[-1]
-    if fileType == 'xlsx' or fileType == 'xls':
-        df = pd.read_excel(filename)
-    elif fileType == 'csv' or filename == 'txt':
-        df = pd.read_csv(filename)
-    else:
-        rs['status']='datatype failed'
-        return rs
-    if not 'y' in df.columns and not 'Y' in df.columns:
-        rs['status']='data failed'
-        return rs
-    print('at split')
-    #result = sparkClassifier(alg,df,paras)
-    #if result== False:
-    #    rs['status']='alg failed'
-    #rs['result']='acc='+str(result)
-    #rs['status']='success'
-    #return rs 
-    x_train, x_test, y_train, y_test = splitDataset(df, 0.3)
-    if alg == 'SVM':
-        clf = svmTrain(paras)
-    elif alg == 'MLPC':
-        clf = mlpcTrain(paras)
-    elif alg == 'GPC':
-        clf = gpcTrain(paras)
-    else:
-        rs['status']='alg failed'
-        return rs
-    print('at fit')
-
-    clf.fit(x_train, y_train)
-    print('at predict')
-    prediction = clf.predict(x_test)
-    acc = metrics.accuracy_score(y_test, prediction)
-    result = 'acc=' + str(acc)
-    rs['status']='success'
-    rs['result']=result
+def handle(alg, filename, params, label, features):
+    clf = get_train_model(alg, params)
+    result = get_result_and_imgs(alg, clf,label,features,filename)
+    rs = {} 
+    rs["status"] = 'success'
+    rs['result'] = result
     return rs
+
+#@shared_task(base=MLPMAsyncTask)
+#def handle(alg, filename, paras):
+#    '''
+#    算法入口函数
+#    :param alg:算法名称
+#    :param paras: 参数列表
+#    :param filename: 数据集路径
+#    :return: 准确率，模型
+#    '''
+#    print('???')
+#    rs={}
+#    rs['alg']=alg
+#    clf = ''
+#    if alg in ['Linear','Bayes','Ridge']:
+#        rs = regressionModel(alg, filename, paras)
+#        return rs
+#    fileType = filename.split('.')[-1]
+#    if fileType == 'xlsx' or fileType == 'xls':
+#        df = pd.read_excel(filename)
+#    elif fileType == 'csv' or filename == 'txt':
+#        df = pd.read_csv(filename)
+#    else:
+#        rs['status']='datatype failed'
+#        return rs
+#    if not 'y' in df.columns and not 'Y' in df.columns:
+#        rs['status']='data failed'
+#        return rs
+#    print('at split')
+#    #result = sparkClassifier(alg,df,paras)
+#    #if result== False:
+#    #    rs['status']='alg failed'
+#    #rs['result']='acc='+str(result)
+#    #rs['status']='success'
+#    #return rs 
+#    x_train, x_test, y_train, y_test = splitDataset(df, 0.3)
+#    if alg == 'SVM':
+#        clf = svmTrain(paras)
+#    elif alg == 'MLPC':
+#        clf = mlpcTrain(paras)
+#    elif alg == 'GPC':
+#        clf = gpcTrain(paras)
+#    else:
+#        rs['status']='alg failed'
+#        return rs
+#    print('at fit')
+#
+#    clf.fit(x_train, y_train)
+#    print('at predict')
+#    prediction = clf.predict(x_test)
+#    acc = metrics.accuracy_score(y_test, prediction)
+#    result = 'acc=' + str(acc)
+#    rs['status']='success'
+#    rs['result']=result
+#    return rs
+#
+
+
 
 def transData2RDD(df,features):
     rel = {}

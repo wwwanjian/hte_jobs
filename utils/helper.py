@@ -23,7 +23,7 @@ def add_mlpm_task_func(func, description: str=None) -> dict:
     """
     session = PGSession()
     try:
-        task_func = MLPMTaskFunc(name=f'{func.__module__}:{func.__name__}',
+        task_func = MLPMTaskFunc(name='{0}:{1}'.format(func.__module__,func.__name__),
                                  desc=description,
                                  doc=func.__doc__)
         session.add(task_func)
@@ -38,3 +38,7 @@ def add_mlpm_task_func(func, description: str=None) -> dict:
     finally:
         session.close()
 
+
+if __name__=='__main__':
+    fun = None
+    add_mlpm_task_func(func)
