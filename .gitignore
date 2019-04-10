@@ -6,6 +6,13 @@ __pycache__/
 # pycharm
 .idea/
 
+# meida
+media/_fs/
+media/_fs/result/
+
+!media/_fs/readme.md
+!media/_fs/result/readme.md
+
 # C extensions
 *.so
 
