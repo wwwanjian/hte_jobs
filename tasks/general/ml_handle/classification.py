@@ -13,7 +13,7 @@ def get_random_filename(n=20):
     charter = '01233456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
     filename = ''
     for i in range(n):
-        filename += charter[random.randint(0, len(charter))]
+        filename += charter[random.randint(0, len(charter)-1)]
     filename += '.xlsx'
     return filename
 
@@ -39,6 +39,7 @@ def svm_classifier(params):
 
 
 def svm_result(label, features, clf, dataset):
+    print(1)
     X, Y = get_X_Y_data(dataset, label, features)
     x_train, x_test, y_train, y_test = split_dataset(X, Y, 0.3)
     clf.fit(x_train, y_train)
@@ -50,7 +51,9 @@ def svm_result(label, features, clf, dataset):
     result_file = pd.concat([x_test, y_test,
                              pd.DataFrame(y_prediciton, columns=['Y_pred'])], axis=1)
     filename = get_random_filename(20)
+    result["test"] = 0
     result['filename'] = os.path.join('result', filename)
+    print(result)
     result_file.to_excel(os.path.join(MEDIA_DIR, result['filename']))
     return result
 

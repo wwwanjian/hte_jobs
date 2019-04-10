@@ -99,7 +99,9 @@ def get_task_result(task_id):
         }
     }
     """
+    print("result")
     result = celery_app.AsyncResult(task_id)
+    print(result.result)
     r = dict(task_id=result.id,
              status=result.status,
              result=result.result,
@@ -365,6 +367,7 @@ def upload_file():
         func_args = get_param(request.form, 'args')
         username = get_param(request.form, 'username', required=False)
         func_name = get_param(request.form, 'name')
+        print(func_name)
         func_desc = get_param(request.form, 'desc', required=False)
         func_id = PGSession.query(MLPMTaskFunc.id).filter(MLPMTaskFunc.name == func_name).scalar()
         if not func_id:
@@ -394,7 +397,6 @@ def upload_file():
         session = PGSession()
         file = request.files['file']
         if file and allow_file(file.filename):
-            print('get file')
             filename = secure_filename(file.filename)
             file.save(os.path.join(MEDIA_DIR, filename))
             rs['status'] = 'ok'
@@ -402,12 +404,10 @@ def upload_file():
             rs['args'] = func_args
         try:
             alg = args[0]
-            print(alg)
             params = args[1]
             label = args[2]
             features = args[3]
             r = func.delay(alg, os.path.join(MEDIA_DIR, filename), params, label, features)
-            print(r.id)
             user_task = UserTask(username=username, func_id=func_id,
                                  task_id=r.id, args=func_args, kwargs=func_kwargs,
                                  desc=func_desc)
@@ -415,10 +415,8 @@ def upload_file():
             session.commit()
             return make_json_resp(user_task.as_dict())
         except Exception:
-            print('6')
             current_app.logger.exception('Unknown error occurs:')
             session.rollback()
             raise MLPMJobException(MLPMJobErrorEnum.UNKNOWN_ERROR)
         finally:
-            print('close')
             session.close()
