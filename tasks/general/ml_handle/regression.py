@@ -25,9 +25,8 @@ def linear_result(label, features, clf, dataset):
     result_file = pd.concat([x_test, y_test,
                              pd.DataFrame(y_prediciton, columns=['Y_pred'])], axis=1)
     filename = get_random_filename(20)
-    result["test"] = 0
-    result['filename'] = os.path.join('result', filename)
-    result_file.to_excel(os.path.join(MEDIA_DIR, result['filename']))
+    result['filename'] = filename
+    result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']))
     return result
 
 
