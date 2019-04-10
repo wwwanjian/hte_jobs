@@ -19,6 +19,7 @@ from utils.error import MLPMJobException, MLPMJobErrorEnum
 from utils.general import get_param, make_json_resp, import_object
 from settings.default import MEDIA_DIR
 from tasks.general.example import handle
+from flask import send_file, send_from_directory
 
 task_manager_bp = Blueprint('task_manager', __name__)
 
@@ -99,14 +100,18 @@ def get_task_result(task_id):
         }
     }
     """
-    print("result")
     result = celery_app.AsyncResult(task_id)
-    print(result.result)
     r = dict(task_id=result.id,
              status=result.status,
              result=result.result,
              traceback=result.traceback)
     return make_json_resp(r)
+
+
+@task_manager_bp.route('/api/v1/download/<filename>', methods=['GET'])
+def download_file(filename):
+    dirpath = os.path.join(MEDIA_DIR, 'result')
+    return send_from_directory(dirpath, filename, as_attachment=True)
 
 
 @task_manager_bp.route('/api/v1/task/<task_id>/terminate', methods=['POST'])

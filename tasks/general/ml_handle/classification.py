@@ -39,7 +39,6 @@ def svm_classifier(params):
 
 
 def svm_result(label, features, clf, dataset):
-    print(1)
     X, Y = get_X_Y_data(dataset, label, features)
     x_train, x_test, y_train, y_test = split_dataset(X, Y, 0.3)
     clf.fit(x_train, y_train)
@@ -53,7 +52,6 @@ def svm_result(label, features, clf, dataset):
     filename = get_random_filename(20)
     result["test"] = 0
     result['filename'] = os.path.join('result', filename)
-    print(result)
     result_file.to_excel(os.path.join(MEDIA_DIR, result['filename']))
     return result
 
