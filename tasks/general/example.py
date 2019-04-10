@@ -22,14 +22,15 @@ from sklearn.linear_model import BayesianRidge
 from sklearn.linear_model import Ridge
 from pyspark.ml import Pipeline
 from pyspark.ml.classification import NaiveBayes
-from pyspark.ml.feature import HashingTF, Tokenizer,IndexToString,StringIndexer,VectorIndexer
-from pyspark.sql import SparkSession,Row,functions
-from pyspark.ml.linalg import Vectors,Vector
-from pyspark.ml.classification import DecisionTreeClassifier,LinearSVC,LogisticRegression
+from pyspark.ml.feature import HashingTF, Tokenizer, IndexToString, StringIndexer, VectorIndexer
+from pyspark.sql import SparkSession, Row, functions
+from pyspark.ml.linalg import Vectors, Vector
+from pyspark.ml.classification import DecisionTreeClassifier, LinearSVC, LogisticRegression
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 import os
-from .ml_handle.utils import get_train_model,get_result_and_imgs
-os.environ['JAVA_HOME']='/usr/jdk8'
+from .ml_handle.utils import get_train_model, get_result_and_imgs
+
+os.environ['JAVA_HOME'] = '/usr/jdk8'
 
 LOGGER = get_logger('celery.MLPMAsyncTask')
 
@@ -79,14 +80,15 @@ def spark_word_count(file_path: str) -> dict:
 
 
 @shared_task(base=MLPMAsyncTask)
-def test_of_wj(content:str) -> dict:
-    r={}
-    for word in re.split(r'\s+',content):
+def test_of_wj(content: str) -> dict:
+    r = {}
+    for word in re.split(r'\s+', content):
         if r.get(word, None) is None:
-            r[word]=1
+            r[word] = 1
         else:
-            r[word]+=1
+            r[word] += 1
     return content
+
 
 def splitDataset(df: pd.DataFrame, test_size):
     '''
@@ -106,6 +108,7 @@ def splitDataset(df: pd.DataFrame, test_size):
     x_test = scaler.transform(X_test)
     return x_train, x_test, y_train, y_test
 
+
 def svmTrain(paras):
     '''
     SVM算法训练
@@ -114,6 +117,7 @@ def svmTrain(paras):
     '''
     clf = svm.SVC()
     return clf
+
 
 def mlpcTrain(paras):
     '''
@@ -177,7 +181,7 @@ def ridgeTrain(paras):
 def regressionModel(alg, filename, paras):
     clf = ''
     rs = {}
-    rs['alg']=alg
+    rs['alg'] = alg
     if alg == 'Linear':
         clf = linearReTrain(paras)
     elif alg == 'Bayes':
@@ -185,7 +189,7 @@ def regressionModel(alg, filename, paras):
     elif alg == 'Ridge':
         clf = ridgeTrain(paras)
     else:
-        rs['status']='alg failed'
+        rs['status'] = 'alg failed'
         return rs
     fileType = filename.split('.')[-1]
     print(fileType)
@@ -194,10 +198,10 @@ def regressionModel(alg, filename, paras):
     elif fileType == 'csv' or fileType == 'txt':
         df = pd.read_csv(filename)
     else:
-        rs['status']='dataType failed'
+        rs['status'] = 'dataType failed'
         return rs
     if not 'y' in df.columns and not 'Y' in df.columns:
-        rs['status']='data failed'
+        rs['status'] = 'data failed'
         return rs
     X = df.drop('Y', axis=1)
     Y = df['Y']
@@ -208,22 +212,23 @@ def regressionModel(alg, filename, paras):
     for index, feature in enumerate(features):
         result += str(coef[index]) + '*' + feature + '+'
     result += str(dis)
-    rs['status']='success'
-    rs['result']=result
+    rs['status'] = 'success'
+    rs['result'] = result
     return rs
 
 
 @shared_task(base=MLPMAsyncTask)
 def handle(alg, filename, params, label, features):
     clf = get_train_model(alg, params)
-    result = get_result_and_imgs(alg, clf,label,features,filename)
-    rs = {} 
+    result = get_result_and_imgs(alg, clf, label, features, filename)
+    rs = {}
     rs["status"] = 'success'
     rs['result'] = result
     return rs
 
-#@shared_task(base=MLPMAsyncTask)
-#def handle(alg, filename, paras):
+
+# @shared_task(base=MLPMAsyncTask)
+# def handle(alg, filename, paras):
 #    '''
 #    算法入口函数
 #    :param alg:算法名称
@@ -279,17 +284,17 @@ def handle(alg, filename, params, label, features):
 #
 
 
-
-def transData2RDD(df,features):
+def transData2RDD(df, features):
     rel = {}
     if 'Y' in features:
         rel['label'] = df['Y']
-        index=features.drop('Y')
+        index = features.drop('Y')
     elif 'y' in features:
         rel['label'] = df['Y']
-        index=features.drop('Y')
+        index = features.drop('Y')
     rel['features'] = Vectors.dense([df[feature] for feature in index])
     return rel
+
 
 def sparkClassifier(alg, df, params):
     spark = SparkSession.builder.master('local').appName('test').getOrCreate()
@@ -297,21 +302,24 @@ def sparkClassifier(alg, df, params):
     # rdd和dataframe转换
     data = spark.createDataFrame(df)
     data = data.rdd
-    data = data.map(lambda p:Row(**transData2RDD(p,features))).toDF()
+    data = data.map(lambda p: Row(**transData2RDD(p, features))).toDF()
 
-    if alg=='SVM':
+    if alg == 'SVM':
         dtClassifier = DecisionTreeClassifier().setLabelCol("indexedLabel").setFeaturesCol("indexedFeatures")
-    elif alg=='MLPC':
-        dtClassifier = NaiveBayes(smoothing=1.0,modelType='multinomial').setLabelCol('indexedLabel').setFeaturesCol('indexedFeatures')
-    elif alg=='GPC':
+    elif alg == 'MLPC':
+        dtClassifier = NaiveBayes(smoothing=1.0, modelType='multinomial').setLabelCol('indexedLabel').setFeaturesCol(
+            'indexedFeatures')
+    elif alg == 'GPC':
         dtClassifier = LogisticRegression(regParam=0.01).setLabelCol('indexedLabel').setFeaturesCol('indexedFeatures')
     else:
-         return False
+        return False
 
     # 获取标签列和特征列并重命名，划分数据集
     labelIndexer = StringIndexer().setInputCol("label").setOutputCol("indexedLabel").fit(data)
-    featureIndexer = VectorIndexer().setInputCol("features").setOutputCol("indexedFeatures").setMaxCategories(5).fit(data)
-    labelConverter = IndexToString().setInputCol("prediction").setOutputCol("predictedLabel").setLabels(labelIndexer.labels)
+    featureIndexer = VectorIndexer().setInputCol("features").setOutputCol("indexedFeatures").setMaxCategories(5).fit(
+        data)
+    labelConverter = IndexToString().setInputCol("prediction").setOutputCol("predictedLabel").setLabels(
+        labelIndexer.labels)
     trainingData, testData = data.randomSplit([0.7, 0.3])
 
     # 构造工作流并进行训练和预测
@@ -320,14 +328,14 @@ def sparkClassifier(alg, df, params):
     predictionsClassifier = modelClassifier.transform(testData)
     # 评估
 
-    evaluatorClassifier = MulticlassClassificationEvaluator().setLabelCol("indexedLabel").setPredictionCol("prediction").setMetricName("accuracy")
+    evaluatorClassifier = MulticlassClassificationEvaluator().setLabelCol("indexedLabel").setPredictionCol(
+        "prediction").setMetricName("accuracy")
     accuracy = evaluatorClassifier.evaluate(predictionsClassifier)
     return accuracy
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     df = pd.read_excel('/srv/sites/mlpm-jobs/media/_fs/test.xlsx')
-    #handle.delay("SVM",'/srv/sites/mlpm-jobs/media/_fs/test.xlsx',{})
-    result = sparkClassifier('SVM',df,{})
+    # handle.delay("SVM",'/srv/sites/mlpm-jobs/media/_fs/test.xlsx',{})
+    result = sparkClassifier('SVM', df, {})
     print(result)
-

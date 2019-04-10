@@ -3,6 +3,19 @@ from sklearn import metrics
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
+import pandas as pd
+from settings.default import MEDIA_DIR
+import random
+import os
+
+
+def get_random_filename(n=20):
+    charter = '01233456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
+    filename = ''
+    for i in range(n):
+        filename += charter[random.randint(0, len(charter))]
+    filename += '.xlsx'
+    return filename
 
 
 def split_dataset(X, Y, test_size=0.3):
@@ -32,7 +45,13 @@ def svm_result(label, features, clf, dataset):
     y_prediciton = clf.predict(x_test)
     result = {}
     result['acc'] = metrics.accuracy_score(y_test, y_prediciton)
-
+    x_test = x_test.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    result_file = pd.concat([x_test, y_test,
+                             pd.DataFrame(y_prediciton, columns=['Y_pred'])], axis=1)
+    filename = get_random_filename(20)
+    result['filename'] = os.path.join('result', filename)
+    result_file.to_excel(os.path.join(MEDIA_DIR, result['filename']))
     return result
 
 
@@ -73,4 +92,4 @@ def mlp_result(label, features, clf, dataset):
 if __name__ == '__main__':
     params = {'gamma': 'scale', 'decision_function_shape': 'ovr', 'degree': 4}
     svm_classifier(params)
-
+    filename = get_random_filename(20)

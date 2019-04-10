@@ -351,17 +351,18 @@ def list_mlpm_task_funcs():
 
 
 def allow_file(filename):
-    return '.' in filename and filename.rsplit('.',1)[1] in ['txt','csv','xlsx','xls']
+    return '.' in filename and filename.rsplit('.', 1)[1] in ['txt', 'csv', 'xlsx', 'xls']
 
-@task_manager_bp.route('/api/v1/upload',methods=['POST'])
+
+@task_manager_bp.route('/api/v1/upload', methods=['POST'])
 def upload_file():
     print('get request')
     rs = {}
     alg = 'SVM'
     if request.method == 'POST':
         print('request method is post')
-        func_kwargs = get_param(request.form,'kwargs')
-        func_args = get_param(request.form,'args')
+        func_kwargs = get_param(request.form, 'kwargs')
+        func_args = get_param(request.form, 'args')
         username = get_param(request.form, 'username', required=False)
         func_name = get_param(request.form, 'name')
         func_desc = get_param(request.form, 'desc', required=False)
@@ -373,42 +374,43 @@ def upload_file():
             alg = args[0]
             if not isinstance(args, typing.Iterable):
                 raise MLPMJobException(MLPMJobErrorEnum.BAD_FUNC_PARAM,
-                                   '`args` 必须是合法的可迭代对象。')
+                                       '`args` 必须是合法的可迭代对象。')
             kwargs = json.loads(func_kwargs)
             if not isinstance(kwargs, typing.Dict):
                 raise MLPMJobException(MLPMJobErrorEnum.BAD_FUNC_PARAM,
-                                   '`kwargs` 必须是合法的字典对象。')
+                                       '`kwargs` 必须是合法的字典对象。')
         except JSONDecodeError:
-            current_app.logger.warning(f'<User: {username}> submit a task with bad arguments: ({func_args}, {func_kwargs})')
+            current_app.logger.warning(
+                f'<User: {username}> submit a task with bad arguments: ({func_args}, {func_kwargs})')
             raise MLPMJobException(MLPMJobErrorEnum.BAD_ARGUMENTS,
-                               '您提供的函数参数不是可解析的 JSON 字符串！')
+                                   '您提供的函数参数不是可解析的 JSON 字符串！')
         func = import_object(func_name)
         if not isinstance(func, MLPMAsyncTask):
             raise MLPMJobException(MLPMJobErrorEnum.ILLEGAL_FUNC,
-                               '你选择的函数不是合法的 MLPM 异步函数')
+                                   '你选择的函数不是合法的 MLPM 异步函数')
         if 'file' not in request.files:
             raise MLPMJobException(MLPMJobErrorEnum.NO_FILE,
-                               '你没有上传文件！')
+                                   '你没有上传文件！')
         session = PGSession()
         file = request.files['file']
         if file and allow_file(file.filename):
             print('get file')
             filename = secure_filename(file.filename)
-            file.save(os.path.join(MEDIA_DIR,filename))
-            rs['status']='ok'
-            rs['kwargs']=func_kwargs
-            rs['args']=func_args
+            file.save(os.path.join(MEDIA_DIR, filename))
+            rs['status'] = 'ok'
+            rs['kwargs'] = func_kwargs
+            rs['args'] = func_args
         try:
             alg = args[0]
             print(alg)
             params = args[1]
             label = args[2]
             features = args[3]
-            r = func.delay(alg,os.path.join(MEDIA_DIR,filename),params,label,features)
+            r = func.delay(alg, os.path.join(MEDIA_DIR, filename), params, label, features)
             print(r.id)
             user_task = UserTask(username=username, func_id=func_id,
-                             task_id=r.id, args=func_args, kwargs=func_kwargs,
-                             desc=func_desc)
+                                 task_id=r.id, args=func_args, kwargs=func_kwargs,
+                                 desc=func_desc)
             session.add(user_task)
             session.commit()
             return make_json_resp(user_task.as_dict())
