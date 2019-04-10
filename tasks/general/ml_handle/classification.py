@@ -13,7 +13,7 @@ def get_random_filename(n=20):
     charter = '01233456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
     filename = ''
     for i in range(n):
-        filename += charter[random.randint(0, len(charter)-1)]
+        filename += charter[random.randint(0, len(charter) - 1)]
     filename += '.xlsx'
     return filename
 
@@ -53,7 +53,7 @@ def svm_result(label, features, clf, dataset):
     filename = get_random_filename(20)
     result["test"] = 0
     result['filename'] = filename
-    result_file.to_excel(os.path.join(MEDIA_DIR, 'result',result['filename']))
+    result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']), index=False)
     return result
 
 
@@ -76,7 +76,7 @@ def gpc_result(label, features, clf, dataset):
                              pd.DataFrame(y_prediciton, columns=['Y_pred'])], axis=1)
     filename = get_random_filename(20)
     result['filename'] = filename
-    result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']))
+    result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']), index=False)
     return result
 
 
@@ -99,7 +99,7 @@ def mlp_result(label, features, clf, dataset):
                              pd.DataFrame(y_prediciton, columns=['Y_pred'])], axis=1)
     filename = get_random_filename(20)
     result['filename'] = filename
-    result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']))
+    result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']), index=False)
     return result
 
 

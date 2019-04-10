@@ -15,18 +15,18 @@ def linear_result(label, features, clf, dataset):
     X, Y = get_X_Y_data(dataset, label, features)
     x_train, x_test, y_train, y_test = split_dataset(X, Y, 0.3)
     clf.fit(x_train, y_train)
-    y_prediciton = clf.predict(x_test)
     result = {}
     result['score'] = clf.score(x_test, y_test)
     result['coef'] = list(clf.coef_)
     result['intercept'] = clf.intercept_
+    y_prediciton = clf.predict(x_test)
     x_test = x_test.reset_index(drop=True)
     y_test = y_test.reset_index(drop=True)
     result_file = pd.concat([x_test, y_test,
                              pd.DataFrame(y_prediciton, columns=['Y_pred'])], axis=1)
     filename = get_random_filename(20)
     result['filename'] = filename
-    result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']))
+    result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']), index=False)
     return result
 
 
@@ -36,7 +36,7 @@ def ridg_regression(params):
     return clf
 
 
-def ridge_result(label,features, clf, dataset):
+def ridge_result(label, features, clf, dataset):
     X, Y = get_X_Y_data(dataset, label, features)
     x_train, x_test, y_train, y_test = split_dataset(X, Y, 0.3)
     clf.fit(x_train, y_train)
@@ -44,6 +44,14 @@ def ridge_result(label,features, clf, dataset):
     result['score'] = clf.score(x_test, y_test)
     result['coef'] = list(clf.coef_)
     result['intercept'] = clf.intercept_
+    y_prediciton = clf.predict(x_test)
+    x_test = x_test.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    result_file = pd.concat([x_test, y_test,
+                             pd.DataFrame(y_prediciton, columns=['Y_pred'])], axis=1)
+    filename = get_random_filename(20)
+    result['filename'] = filename
+    result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']), index=False)
     return result
 
 
@@ -53,7 +61,7 @@ def bayes_regression(params):
     return clf
 
 
-def bayes_result(label, features,clf, dataset):
+def bayes_result(label, features, clf, dataset):
     X, Y = get_X_Y_data(dataset, label, features)
     x_train, x_test, y_train, y_test = split_dataset(X, Y, 0.3)
     clf.fit(x_train, y_train)
@@ -61,6 +69,14 @@ def bayes_result(label, features,clf, dataset):
     result['score'] = clf.score(x_test, y_test)
     result['coef'] = list(clf.coef_)
     result['intercept'] = clf.intercept_
+    y_prediciton = clf.predict(x_test)
+    x_test = x_test.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    result_file = pd.concat([x_test, y_test,
+                             pd.DataFrame(y_prediciton, columns=['Y_pred'])], axis=1)
+    filename = get_random_filename(20)
+    result['filename'] = filename
+    result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']), index=False)
     return result
 
 
@@ -74,4 +90,3 @@ if __name__ == "__main__":
     result['score'] = clf.score(x_test, y_test)
     result['coef'] = clf.coef_
     result['intercept'] = clf.intercept_
-
