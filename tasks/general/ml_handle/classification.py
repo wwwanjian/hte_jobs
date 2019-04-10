@@ -70,7 +70,14 @@ def gpc_result(label, features, clf, dataset):
     y_prediciton = clf.predict(x_test)
     result = {}
     result['acc'] = metrics.accuracy_score(y_test, y_prediciton)
-
+    x_test = x_test.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    result_file = pd.concat([x_test, y_test,
+                             pd.DataFrame(y_prediciton, columns=['Y_pred'])], axis=1)
+    filename = get_random_filename(20)
+    result["test"] = 0
+    result['filename'] = os.path.join('result', filename)
+    result_file.to_excel(os.path.join(MEDIA_DIR, result['filename']))
     return result
 
 
@@ -87,7 +94,14 @@ def mlp_result(label, features, clf, dataset):
     y_prediciton = clf.predict(x_test)
     result = {}
     result['acc'] = metrics.accuracy_score(y_test, y_prediciton)
-
+    x_test = x_test.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
+    result_file = pd.concat([x_test, y_test,
+                             pd.DataFrame(y_prediciton, columns=['Y_pred'])], axis=1)
+    filename = get_random_filename(20)
+    result["test"] = 0
+    result['filename'] = os.path.join('result', filename)
+    result_file.to_excel(os.path.join(MEDIA_DIR, result['filename']))
     return result
 
 
