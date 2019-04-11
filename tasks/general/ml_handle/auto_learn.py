@@ -25,10 +25,10 @@ def auto_class_result(label, features, clf, dataset):
     x_train, x_test, y_train, y_test = split_dataset(X, Y, 0.3)
     clf.fit(x_train, y_train)
     y_prediciton = clf.predict(x_test)
-    socer = make_scorer('f1', metrics.f1_score(y_test, y_prediciton))
+    #socer = make_scorer('f1', metrics.f1_score(y_test, y_prediciton))
     result = {}
     result['acc'] = metrics.accuracy_score(y_test, y_prediciton)
-    result['f1'] = socer
+    #result['f1'] = socer
     x_test = x_test.reset_index(drop=True)
     y_test = y_test.reset_index(drop=True)
     result_file = pd.concat([x_test, y_test,
