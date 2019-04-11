@@ -3,6 +3,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 from werkzeug.utils import secure_filename
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 
 
 def get_clf():
@@ -38,5 +40,15 @@ def get_result(path):
 
 
 if __name__ == '__main__':
-    path = 'test.xlsx'
-    result = get_result(path)
+    df = pd.read_excel('test.xlsx')
+    X = df[['X1', 'X2', 'X3', 'X4']]
+    clf = PCA(n_components=2)
+    clf.fit(X)
+    X_after_pca = clf.transform(X)
+    result = {}
+    result['components'] = [list(component) for component in clf.components_]
+    result['explained_variance_ratio'] = list(clf.explained_variance_ratio_)
+    result['singular_values'] = list(clf.singular_values_)
+    result_file = pd.DataFrame(X_after_pca)
+    result_file.to_excel('result_test.xlsx', index=False)
+    print(pd.DataFrame(X_after_pca))
