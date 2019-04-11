@@ -21,8 +21,7 @@ def kmeans_result(label, features, clf, dataset):
     filename = get_random_filename(20)
     result['filename'] = filename
     result_file.to_excel(os.path.join(MEDIA_DIR, 'result', result['filename']), index=False)
-    imgs = None
-    return result, imgs
+    return result
 
 
 if __name__ == "__main__":
